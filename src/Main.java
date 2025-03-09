@@ -11,7 +11,7 @@ public class Main {
             Scanner sc = new Scanner(file);
             while (sc.hasNextLine()){
                 String line = sc.nextLine();
-                System.out.println(line);
+                System.out.println(Tokenizer.getToken(line).name());
             }
         } catch (FileNotFoundException e) {
             System.out.println("Scanner Error on File");

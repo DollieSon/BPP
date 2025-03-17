@@ -6,7 +6,7 @@ public class Tokenizer{
     public enum Token_Enum {
         PROGRAM_START, PROGRAM_END,
         VAR_DECLARE,EQUAL_ASSIGN,
-
+        COMMENT_SIGN,
         //DATA TYPES
         INT_TYPE,CHAR_TYPE,BOOL_TYPE,FLOAT_TYPE,
 
@@ -16,6 +16,9 @@ public class Tokenizer{
         //Boolean Operators
         EQUALTO_OPP,AND_BOOL,OR_BOOL,
 
+        //Comparisson Opperators
+        GREATER_THAN,LESS_THAN,GT_EQUAL,LT_EQUAL,NOT_EQUAL,
+
         //Last Option
         VARIABLE_NAME,
         //Error
@@ -23,9 +26,37 @@ public class Tokenizer{
 
         //Stoppers or Separators
         COMMA,PAREN_OPEN,PAREN_CLOSE,
+
+    }
+    private class ExtendedPair{
+        Token_Enum orig_enum;
+        String possible_string;
+        Token_Enum sec_enum;
+        String third_string;
+        Token_Enum third_enum;
+        public ExtendedPair(String ch,Token_Enum orig,Token_Enum second){
+            possible_string = ch;
+            orig_enum = orig;
+            sec_enum = second;
+            third_string = new String();
+        }
+        public void Add_Third(String st, Token_Enum third){
+            third_string = st;
+            third_enum = third;
+        }
+        public Token_Enum getEnum(String str){
+            if(str.equals(possible_string)){
+                return sec_enum;
+            }else if (!this.third_string.isEmpty() && third_string.equals(str)){
+                return third_enum;
+            }else{
+                return orig_enum;
+            }
+        }
     }
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
+    HashMap<Character,ExtendedPair> double_stopper;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
         keyword_pairs.put("SUGOD", Token_Enum.PROGRAM_START);
@@ -47,7 +78,15 @@ public class Tokenizer{
         single_stoper.put("*", Token_Enum.MUL_OPP);
         single_stoper.put("%", Token_Enum.MOD_OPP);
         single_stoper.put("+", Token_Enum.ADD_OPP);
-        single_stoper.put("-", Token_Enum.SUB_OPP);
+
+        //for double stoppers
+        double_stopper =  new HashMap<>();
+        double_stopper.put('=',new ExtendedPair("==",Token_Enum.EQUAL_ASSIGN,Token_Enum.EQUALTO_OPP));
+        ExtendedPair lt = new ExtendedPair("<=",Token_Enum.LESS_THAN,Token_Enum.LT_EQUAL);
+        lt.Add_Third("<>",Token_Enum.NOT_EQUAL);
+        double_stopper.put('<',lt);
+        double_stopper.put('>',new ExtendedPair(">=",Token_Enum.GREATER_THAN,Token_Enum.GT_EQUAL));
+        double_stopper.put('-',new ExtendedPair("--",Token_Enum.SUB_OPP,Token_Enum.COMMENT_SIGN));
 
     }
     public ArrayList<Token> tokenize(Scanner input){
@@ -67,6 +106,10 @@ public class Tokenizer{
                     for(char ch : word.toCharArray()){
                         //check if ch is a stoper
                         //True: add temp_str to tok as var
+                        char last_ch = 'X';
+                        if (!temp_str.isEmpty())   {
+                            last_ch = temp_str.charAt(temp_str.length()-1);
+                        }
                         if(single_stoper.containsKey(String.valueOf(ch))){
                             if(!temp_str.isEmpty()){
                                 Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString());
@@ -75,6 +118,17 @@ public class Tokenizer{
                             temp_str = new StringBuilder();
                             Token_Enum tok = this.single_stoper.get(String.valueOf(ch));
                             res.add(new Token(tok,String.valueOf(ch)));
+                        }
+                        else if (!temp_str.isEmpty() && double_stopper.containsKey(last_ch)){
+                            //adding the var_name
+                            String var_str = temp_str.substring(0,temp_str.length()-1);
+                            res.add(new Token(Token_Enum.VARIABLE_NAME, var_str));
+                            temp_str = new StringBuilder();
+                            //adding the stoper
+                            StringBuilder sb = new StringBuilder(last_ch);
+                            sb.append(ch);
+                            Token_Enum tok_enum = double_stopper.get(last_ch).getEnum(sb.toString());
+                            Token tok = new Token(tok_enum,sb.toString());
                         }
                         //False: add ch to temp_str
                         else{

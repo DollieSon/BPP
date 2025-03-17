@@ -1,4 +1,7 @@
 SUGOD
-MUGNA LETRA TIPIK sometihng+else
-MUGNA
+MUGNA LETRA TIPIK sometihng<>else
+MUGNA haha==
+<=
+<something
+>else
 KATAPUSAN

@@ -11,7 +11,7 @@ public class Main {
         try {
             Scanner input = new Scanner(file);
             Tokenizer tok = new Tokenizer();
-            ArrayList<Tokenizer.Token> res = tok.tokenize(input);
+            ArrayList<Token> res = tok.tokenize(input);
             System.out.println("Done");
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

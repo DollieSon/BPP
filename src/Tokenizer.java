@@ -28,6 +28,8 @@ public class Tokenizer{
         COMMA,PAREN_OPEN,PAREN_CLOSE,
 
     }
+
+
     private class ExtendedPair{
         Token_Enum orig_enum;
         String possible_string;
@@ -50,10 +52,12 @@ public class Tokenizer{
             }else if (!this.third_string.isEmpty() && third_string.equals(str)){
                 return third_enum;
             }else{
-                return orig_enum;
+                return Token_Enum.ERROR_TOKEN;
             }
         }
     }
+
+
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
     HashMap<Character,ExtendedPair> double_stopper;
@@ -91,14 +95,16 @@ public class Tokenizer{
     }
     public ArrayList<Token> tokenize(Scanner input){
         ArrayList<Token> res = new ArrayList<>();
+        int line_len = 0;
         while(input.hasNextLine()){
+            line_len+=1;
             String line = input.nextLine();
             String[] keywords = line.split("\\s+");
             for (String word : keywords){
                 System.out.println("Parsing : " + word);
                 if (this.keyword_pairs.containsKey(word)){
                     Token_Enum tok = this.keyword_pairs.get(word);
-                    Token token = new Token(tok,word);
+                    Token token = new Token(tok,word,line_len);
                     res.add(token);
                 }else{
                     //parse per character
@@ -112,30 +118,45 @@ public class Tokenizer{
                         }
                         if(single_stoper.containsKey(String.valueOf(ch))){
                             if(!temp_str.isEmpty()){
-                                Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString());
+                                Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len);
                                 res.add(tok);
                             }
                             temp_str = new StringBuilder();
                             Token_Enum tok = this.single_stoper.get(String.valueOf(ch));
-                            res.add(new Token(tok,String.valueOf(ch)));
+                            res.add(new Token(tok,String.valueOf(ch),line_len));
                         }
-                        else if (!temp_str.isEmpty() && double_stopper.containsKey(last_ch)){
-                            //adding the var_name
-                            String var_str = temp_str.substring(0,temp_str.length()-1);
-                            res.add(new Token(Token_Enum.VARIABLE_NAME, var_str));
-                            temp_str = new StringBuilder();
-                            //adding the stoper
-                            StringBuilder sb = new StringBuilder(last_ch);
+                        else if (double_stopper.containsKey(last_ch)){
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(last_ch);
                             sb.append(ch);
-                            Token_Enum tok_enum = double_stopper.get(last_ch).getEnum(sb.toString());
-                            Token tok = new Token(tok_enum,sb.toString());
+                            ExtendedPair Ep = double_stopper.get(last_ch);
+                            Token_Enum tok_enum = Ep.getEnum(sb.toString());
+                            if(tok_enum == Token_Enum.ERROR_TOKEN){
+                                Token temp_tok = new Token(Token_Enum.VARIABLE_NAME,temp_str.substring(0,temp_str.length()-1),line_len);
+                                res.add(temp_tok);
+                                temp_str = new StringBuilder();
+                                temp_str.append(ch);
+                                Token tok = new Token(Ep.orig_enum,String.valueOf(last_ch),line_len);
+                                res.add(tok);
+                            }else{
+                                String var_str = temp_str.substring(0,temp_str.length()-1);
+                                if(!var_str.isEmpty()){
+                                    res.add(new Token(Token_Enum.VARIABLE_NAME, var_str,line_len));
+                                }
+                                temp_str = new StringBuilder();
+                                //adding the stoper
+                                Token tok = new Token(tok_enum,sb.toString(),line_len);
+                                res.add(tok);
+                            }
                         }
                         //False: add ch to temp_str
                         else{
                             temp_str.append(ch);
                         }
                     }
-                    res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString()));
+                    if(!temp_str.isEmpty()){
+                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len));
+                    }
                 }
             }
         }

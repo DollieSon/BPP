@@ -1,0 +1,7 @@
+SUGOD
+    MUGNA -- This should not matter
+    NUMERO ababa=100, b=200, c=300
+    MUGNA TINUOD d=”DILI”
+    d = (a < b UG c <>200)
+    IPAKITA: d
+KATAPUSAN

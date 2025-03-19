@@ -6,7 +6,7 @@ public class Tokenizer{
     public enum Token_Enum {
         PROGRAM_START, PROGRAM_END,
         VAR_DECLARE,EQUAL_ASSIGN,
-        COMMENT_SIGN,
+        COMMENT_SIGN,COMMENT_STRING,
         //DATA TYPES
         INT_TYPE,CHAR_TYPE,BOOL_TYPE,FLOAT_TYPE,
 
@@ -98,6 +98,7 @@ public class Tokenizer{
         int line_len = 0;
         while(input.hasNextLine()){
             line_len+=1;
+            boolean is_comment = false;
             String line = input.nextLine();
             String[] keywords = line.split("\\s+");
             for (String word : keywords){
@@ -106,7 +107,9 @@ public class Tokenizer{
                     Token_Enum tok = this.keyword_pairs.get(word);
                     Token token = new Token(tok,word,line_len);
                     res.add(token);
-                }else{
+                } else if (is_comment) {
+                    res.add(new Token(Token_Enum.COMMENT_STRING,word,line_len));
+                } else{
                     //parse per character
                     StringBuilder temp_str = new StringBuilder();
                     for(char ch : word.toCharArray()){
@@ -131,6 +134,9 @@ public class Tokenizer{
                             sb.append(ch);
                             ExtendedPair Ep = double_stopper.get(last_ch);
                             Token_Enum tok_enum = Ep.getEnum(sb.toString());
+                            if(tok_enum == Token_Enum.COMMENT_SIGN){
+                                is_comment = true;
+                            }
                             if(tok_enum == Token_Enum.ERROR_TOKEN){
                                 Token temp_tok = new Token(Token_Enum.VARIABLE_NAME,temp_str.substring(0,temp_str.length()-1),line_len);
                                 res.add(temp_tok);

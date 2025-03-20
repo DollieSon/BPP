@@ -6,6 +6,8 @@ public class Tokenizer{
     public enum Token_Enum {
         PROGRAM_START, PROGRAM_END,
         VAR_DECLARE,EQUAL_ASSIGN,
+
+        //comments
         COMMENT_SIGN,COMMENT_STRING,
         //DATA TYPES
         INT_TYPE,CHAR_TYPE,BOOL_TYPE,FLOAT_TYPE,
@@ -27,6 +29,12 @@ public class Tokenizer{
         //Stoppers or Separators
         COMMA,PAREN_OPEN,PAREN_CLOSE,
 
+        //Fixed Functions
+        PRINT_FUNC,INPUT_FUNC,
+
+        //conditionals
+        IF_COND,ELSE_COND,ELIF_COND,CODE_BLOCK,
+        FOR_LOOP
     }
 
 
@@ -72,6 +80,10 @@ public class Tokenizer{
         keyword_pairs.put("TIPIK", Token_Enum.FLOAT_TYPE);
         keyword_pairs.put("UG", Token_Enum.AND_BOOL);
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
+        keyword_pairs.put("KUNG", Token_Enum.IF_COND);
+        keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
+        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
+        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
 
         //for single stoppers
         single_stoper = new HashMap<>();

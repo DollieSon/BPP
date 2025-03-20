@@ -1,0 +1,9 @@
+SUGOD
+	MUGNA NUMERO x,y,z=5
+	MUGNA LETRA a_1=`n`
+	MUGNA TINOUD t="OO"
+	x=y=4
+	a__1=`c`
+	-- this is a comment
+	IPAKITA x & y & z & $ & a_1 & [#] & "last"
+KATAPUSAN

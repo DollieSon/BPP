@@ -7,11 +7,13 @@ import java.util.Scanner;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        File file = new File("input2.txt");
+        File file = new File("test_files/input2.txt");
         try {
             Scanner input = new Scanner(file);
             Tokenizer tok = new Tokenizer();
             ArrayList<Token> res = tok.tokenize(input);
+            Parser parser = new Parser(res);
+            parser.parse();
             System.out.println("Done");
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

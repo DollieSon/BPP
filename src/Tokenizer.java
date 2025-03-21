@@ -114,7 +114,7 @@ public class Tokenizer{
             String line = input.nextLine();
             String[] keywords = line.split("\\s+");
             for (String word : keywords){
-                System.out.println("Parsing : " + word);
+//                System.out.println("Parsing : " + word);
                 if (this.keyword_pairs.containsKey(word)){
                     Token_Enum tok = this.keyword_pairs.get(word);
                     Token token = new Token(tok,word,line_len);
@@ -177,6 +177,9 @@ public class Tokenizer{
                     }
                 }
             }
+        }
+        for(Token token : res){
+            System.out.println("Keyword: " + token.keyword);
         }
         return res;
     }

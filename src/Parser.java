@@ -45,12 +45,17 @@ public class Parser {
     }
 
     private void processStatement() {
-        System.out.println("Processing: " + tokens.get(current).keyword);
+//        System.out.println("Processing: " + tokens.get(current).keyword);
         current++;
     }
 
     private boolean check(Tokenizer.Token_Enum expected) {
         return !isAtEnd() && tokens.get(current).token == expected;
+    }
+
+    public void setTokens(ArrayList<Token> newTokens) {
+        this.tokens = newTokens;
+        this.current = 0;
     }
 
     private void error(String message) {

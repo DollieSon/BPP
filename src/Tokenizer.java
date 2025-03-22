@@ -13,7 +13,7 @@ public class Tokenizer{
         INT_TYPE,CHAR_TYPE,BOOL_TYPE,FLOAT_TYPE,
 
         //Operators
-        ADD_OPP,SUB_OPP,MUL_OPP,MOD_OPP,DIV_OPP,
+        ADD_OPP,SUB_OPP,MUL_OPP,MOD_OPP,DIV_OPP,CONCAT_OPP,
 
         //Boolean Operators
         EQUALTO_OPP,AND_BOOL,OR_BOOL,
@@ -27,7 +27,7 @@ public class Tokenizer{
         ERROR_TOKEN,
 
         //Stoppers or Separators
-        COMMA,PAREN_OPEN,PAREN_CLOSE,
+        COMMA,COLON,PAREN_OPEN,PAREN_CLOSE,
 
         //Fixed Functions
         PRINT_FUNC,INPUT_FUNC,
@@ -88,12 +88,14 @@ public class Tokenizer{
         //for single stoppers
         single_stoper = new HashMap<>();
         single_stoper.put(",", Token_Enum.COMMA);
+        single_stoper.put(":", Token_Enum.COLON);
         single_stoper.put("(", Token_Enum.PAREN_OPEN);
         single_stoper.put(")", Token_Enum.PAREN_CLOSE);
         single_stoper.put("/", Token_Enum.DIV_OPP);
         single_stoper.put("*", Token_Enum.MUL_OPP);
         single_stoper.put("%", Token_Enum.MOD_OPP);
         single_stoper.put("+", Token_Enum.ADD_OPP);
+        single_stoper.put("&", Token_Enum.CONCAT_OPP);
 
         //for double stoppers
         double_stopper =  new HashMap<>();
@@ -179,7 +181,7 @@ public class Tokenizer{
             }
         }
         for(Token token : res){
-            System.out.println("Keyword: " + token.keyword);
+            System.out.println("Keyword: " + token.keyword + " " + token.token);
         }
         return res;
     }

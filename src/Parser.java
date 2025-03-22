@@ -19,9 +19,15 @@ public class Parser {
         // Processing sa tunga tunga
         //Check sa tanan for now
         while (!isAtEnd() && !check(Tokenizer.Token_Enum.PROGRAM_END)) {
-            if (match(Tokenizer.Token_Enum.VAR_DECLARE)) { // Found MUGNA
+            System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
+            if (match(Tokenizer.Token_Enum.VAR_DECLARE)) { //MUGNA
+                System.out.println("1");
                 parseVariableDeclaration();
+            } else if (match(Tokenizer.Token_Enum.PRINT_FUNC)) {
+                System.out.println("2");
+                parsePrintStatement();
             } else {
+                System.out.println("3");
                 processStatement(); // Placeholder for future statements
             }
         }
@@ -74,6 +80,33 @@ public class Parser {
         } while (match(Tokenizer.Token_Enum.COMMA)); // Process multiple variables
     }
 
+    private void parsePrintStatement() {
+        System.out.println("asfk;jasklhjf");
+        // Step 1: Ensure the colon (`:`) is present after `IPAKITA`
+        if (!match(Tokenizer.Token_Enum.COLON)) {
+            error("Expected ':' after IPAKITA");
+        }
+
+        // Step 2: Collect print expressions
+        ArrayList<String> expressions = new ArrayList<>();
+        do {
+            if (match(Tokenizer.Token_Enum.VARIABLE_NAME) || match(Tokenizer.Token_Enum.PRINT_FUNC)) {
+                expressions.add(previous().keyword);
+            } else if (match(Tokenizer.Token_Enum.ERROR_TOKEN)) {
+                error("Invalid print expression");
+            } else {
+                error("Expected a variable, string, or number after IPAKITA:");
+            }
+        } while (match(Tokenizer.Token_Enum.CONCAT_OPP)); // `&` is the concatenation operator
+
+        // Step 3: Output parsed print statement
+        System.out.println("Print Statement: " + String.join(" & ", expressions));
+    }
+
+    private void processStatement() {
+//        System.out.println("Processing: " + tokens.get(current).keyword);
+        current++;
+    }
 
     private boolean match(Tokenizer.Token_Enum expected) {
         if (current < tokens.size() && tokens.get(current).token == expected) {
@@ -89,11 +122,6 @@ public class Parser {
 
     private boolean isAtEnd() {
         return current >= tokens.size();
-    }
-
-    private void processStatement() {
-//        System.out.println("Processing: " + tokens.get(current).keyword);
-        current++;
     }
 
     private boolean check(Tokenizer.Token_Enum expected) {

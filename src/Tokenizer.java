@@ -181,7 +181,7 @@ public class Tokenizer{
             }
         }
         for(Token token : res){
-            System.out.println("Keyword: " + token.keyword + " " + token.token);
+            System.out.println("Keyword: " + token.keyword + " / " + token.token);
         }
         return res;
     }

@@ -107,6 +107,16 @@ public class Tokenizer{
         double_stopper.put('-',new ExtendedPair("--",Token_Enum.SUB_OPP,Token_Enum.COMMENT_SIGN));
 
     }
+
+    /*Algorithm
+        0.Seperate by white space
+        1.Checks For Word-Keywords
+        2.Make StringBuilder (assuming that it is a variable name)
+        3.Checks For Single Characters Keywords (:, +, *, /)
+        3.1Checks For Double Character Keywords  (==, <>, <=)
+        3.2a if found dump StringBuilder and keyword
+        3.2b else Put char on a stringBuilder and repeat step 3
+    */
     public ArrayList<Token> tokenize(Scanner input){
         ArrayList<Token> res = new ArrayList<>();
         int line_len = 0;
@@ -129,7 +139,7 @@ public class Tokenizer{
                     for(char ch : word.toCharArray()){
                         //check if ch is a stoper
                         //True: add temp_str to tok as var
-                        char last_ch = 'X';
+                        char last_ch = 'X'; // 'X' has no meaning
                         if (!temp_str.isEmpty())   {
                             last_ch = temp_str.charAt(temp_str.length()-1);
                         }

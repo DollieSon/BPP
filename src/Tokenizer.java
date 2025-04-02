@@ -82,8 +82,8 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
-        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
+        keyword_pairs.put("IPAKITA:", Token_Enum.PRINT_FUNC);
+        keyword_pairs.put("DAWAT:", Token_Enum.INPUT_FUNC);
 
         //for single stoppers
         single_stoper = new HashMap<>();

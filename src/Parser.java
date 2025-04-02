@@ -15,11 +15,11 @@ public class Parser {
         }
         System.out.println("Program Start: SUGOD");
         current++;
-
         // Processing sa tunga tunga
         //Check sa tanan for now
         while (!isAtEnd() && !check(Tokenizer.Token_Enum.PROGRAM_END)) {
             System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
+            // AHAHHAHAHA BRO MADE A MATCH STATEMENT ICANT
             if (match(Tokenizer.Token_Enum.VAR_DECLARE)) { //MUGNA
                 System.out.println("1");
                 parseVariableDeclaration();

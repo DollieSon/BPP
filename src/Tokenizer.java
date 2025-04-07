@@ -82,8 +82,8 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-        keyword_pairs.put("IPAKITA:", Token_Enum.PRINT_FUNC);
-        keyword_pairs.put("DAWAT:", Token_Enum.INPUT_FUNC);
+        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
+        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
 
         //for single stoppers
         single_stoper = new HashMap<>();
@@ -169,6 +169,15 @@ public class Tokenizer{
                                 Token tok = new Token(Ep.orig_enum,String.valueOf(last_ch),line_len);
                                 res.add(tok);
                             }else{
+//                                if (!sb.isEmpty()) {
+//                                    String bufferedWord = sb.toString();
+//                                    if (this.keyword_pairs.containsKey(bufferedWord)) {
+//                                        res.add(new Token(keyword_pairs.get(bufferedWord), bufferedWord, line_len));
+//                                    } else {
+//                                        res.add(new Token(Token_Enum.VARIABLE_NAME, bufferedWord, line_len));
+//                                    }
+//                                    sb.setLength(0);
+//                                }
                                 String var_str = temp_str.substring(0,temp_str.length()-1);
                                 if(!var_str.isEmpty()){
                                     res.add(new Token(Token_Enum.VARIABLE_NAME, var_str,line_len));

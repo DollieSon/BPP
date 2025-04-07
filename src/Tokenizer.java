@@ -37,8 +37,8 @@ public class Tokenizer{
         FOR_LOOP
     }
 
-
     private class ExtendedPair{
+        HashMap<Token_Enum,Token_Enum> pair;
         Token_Enum orig_enum;
         String possible_string;
         Token_Enum sec_enum;
@@ -65,10 +65,8 @@ public class Tokenizer{
         }
     }
 
-
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
-    HashMap<Character,ExtendedPair> double_stopper;
     HashMap<String, Token_Enum> functions;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
@@ -106,16 +104,6 @@ public class Tokenizer{
         single_stoper.put("'", Token_Enum.SINGLE_QOUTE);
         single_stoper.put("\"", Token_Enum.DOUBLE_QOUTE);
         single_stoper.put("`", Token_Enum.BACK_TICK);
-
-        //for double stoppers
-        double_stopper =  new HashMap<>();
-        double_stopper.put('=',new ExtendedPair("==",Token_Enum.EQUAL_ASSIGN,Token_Enum.EQUALTO_OPP));
-        ExtendedPair lt = new ExtendedPair("<=",Token_Enum.LESS_THAN,Token_Enum.LT_EQUAL);
-        lt.Add_Third("<>",Token_Enum.NOT_EQUAL);
-        double_stopper.put('<',lt);
-        double_stopper.put('>',new ExtendedPair(">=",Token_Enum.GREATER_THAN,Token_Enum.GT_EQUAL));
-        double_stopper.put('-',new ExtendedPair("--",Token_Enum.SUB_OPP,Token_Enum.COMMENT_SIGN));
-
     }
 
     /*Algorithm
@@ -148,11 +136,6 @@ public class Tokenizer{
                     StringBuilder temp_str = new StringBuilder();
                     for(char ch : word.toCharArray()){
                         //check if ch is a stoper
-                        //True: add temp_str to tok as var
-                        char last_ch = 'X'; // 'X' has no meaning
-                        if (!temp_str.isEmpty())   {
-                            last_ch = temp_str.charAt(temp_str.length()-1);
-                        }
                         if(single_stoper.containsKey(String.valueOf(ch))){
                             //check if the previous string is a function
                             if(ch == ':' &&  this.functions.containsKey(temp_str.toString())){
@@ -166,40 +149,79 @@ public class Tokenizer{
                             temp_str = new StringBuilder();
                             Token_Enum tok = this.single_stoper.get(String.valueOf(ch));
                             res.add(new Token(tok,String.valueOf(ch),line_len));
+                            continue;
                         }
-                        else if (double_stopper.containsKey(last_ch)){
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(last_ch);
-                            sb.append(ch);
-                            ExtendedPair Ep = double_stopper.get(last_ch);
-                            Token_Enum tok_enum = Ep.getEnum(sb.toString());
-                            if(tok_enum == Token_Enum.COMMENT_SIGN){
-                                is_comment = true;
-                            }
-                            if(tok_enum == Token_Enum.ERROR_TOKEN){
-                                Token temp_tok = new Token(Token_Enum.VARIABLE_NAME,temp_str.substring(0,temp_str.length()-1),line_len);
-                                res.add(temp_tok);
-                                temp_str = new StringBuilder();
-                                temp_str.append(ch);
-                                Token tok = new Token(Ep.orig_enum,String.valueOf(last_ch),line_len);
-                                res.add(tok);
-                            }else{
-                                String var_str = temp_str.substring(0,temp_str.length()-1);
-                                if(!var_str.isEmpty()){
-                                    res.add(new Token(Token_Enum.VARIABLE_NAME, var_str,line_len));
+                        //bruteforce approach
+                        if(ch == '=' && !res.isEmpty()){
+                            Token top_tok = res.remove(res.size()-1); // topmost token
+                            switch (top_tok.token){
+                                case EQUAL_ASSIGN -> {
+                                    Token tok = new Token(Token_Enum.EQUALTO_OPP,"==",line_len);
+                                    res.add(tok);
+                                    break;
                                 }
-                                temp_str = new StringBuilder();
-                                //adding the stoper
-                                Token tok = new Token(tok_enum,sb.toString(),line_len);
-                                res.add(tok);
+                                case LESS_THAN -> {
+                                    Token tok = new Token(Token_Enum.LT_EQUAL,"<=",line_len);
+                                    res.add(tok);
+                                    break;
+                                }
+                                case GREATER_THAN -> {
+                                    Token tok = new Token(Token_Enum.GT_EQUAL,">=",line_len);
+                                    res.add(tok);
+                                    break;
+                                }
+                                default -> {
+                                    res.add(top_tok);
+                                    if(!temp_str.isEmpty()){
+                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
+                                        temp_str = new StringBuilder();
+                                    }
+                                    Token tok = new Token(Token_Enum.EQUAL_ASSIGN,"=",line_len);
+                                    res.add(tok);
+                                    break;
+                                }
+                            }
+                            continue;
+                        }
+                        if(ch == '>'){
+                            Token top_tok = res.remove(res.size()-1); // topmost token
+                            switch (top_tok.token){
+                                case LESS_THAN -> {
+                                    Token tok = new Token(Token_Enum.NOT_EQUAL,"<>",line_len);
+                                    res.add(tok);
+                                }
+                                default -> {
+                                    res.add(top_tok);
+                                    if(!temp_str.isEmpty()){
+                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
+                                        temp_str = new StringBuilder();
+                                    }
+                                    Token tok = new Token(Token_Enum.GREATER_THAN,">",line_len);
+                                }
                             }
                         }
-                        //False: add ch to temp_str
-                        else{
-                            temp_str.append(ch);
+                        if(ch=='-'){
+                            Token top_tok = res.remove(res.size()-1); // topmost token
+                            switch (top_tok.token){
+                                case SUB_OPP -> {
+                                    Token tok = new Token(Token_Enum.COMMENT_SIGN,"--",line_len);
+                                    is_comment = true;
+                                    res.add(tok);
+                                }
+                                default -> {
+                                    res.add(top_tok);
+                                    if(!temp_str.isEmpty()){
+                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
+                                        temp_str = new StringBuilder();
+                                    }
+                                    Token tok = new Token(Token_Enum.SUB_OPP,"-",line_len);
+                                    res.add(tok);
+                                }
+                            }
                         }
+                        temp_str.append(ch);
                     }
-                    if(!temp_str.isEmpty()){
+                    if(!temp_str.isEmpty() && !is_comment){
                         res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len));
                     }
                 }

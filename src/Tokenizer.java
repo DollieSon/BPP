@@ -27,7 +27,7 @@ public class Tokenizer{
         ERROR_TOKEN,
 
         //Stoppers or Separators
-        COMMA,COLON,PAREN_OPEN,PAREN_CLOSE,
+        COMMA,COLON,PAREN_OPEN,PAREN_CLOSE,SINGLE_QOUTE,DOUBLE_QOUTE,BRACKET_OPEN,BRACKET_CLOSE,BACK_TICK,
 
         //Fixed Functions
         PRINT_FUNC,INPUT_FUNC,
@@ -69,6 +69,7 @@ public class Tokenizer{
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
     HashMap<Character,ExtendedPair> double_stopper;
+    HashMap<String, Token_Enum> functions;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
         keyword_pairs.put("SUGOD", Token_Enum.PROGRAM_START);
@@ -82,8 +83,12 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-        keyword_pairs.put("IPAKITA:", Token_Enum.PRINT_FUNC);
-        keyword_pairs.put("DAWAT:", Token_Enum.INPUT_FUNC);
+
+        //for functions
+        functions = new HashMap<>();
+        functions.put("IPAKITA", Token_Enum.PRINT_FUNC);
+        functions.put("DAWAT", Token_Enum.INPUT_FUNC);
+
 
         //for single stoppers
         single_stoper = new HashMap<>();
@@ -96,6 +101,11 @@ public class Tokenizer{
         single_stoper.put("%", Token_Enum.MOD_OPP);
         single_stoper.put("+", Token_Enum.ADD_OPP);
         single_stoper.put("&", Token_Enum.CONCAT_OPP);
+        single_stoper.put("[", Token_Enum.BRACKET_OPEN);
+        single_stoper.put("]", Token_Enum.BRACKET_CLOSE);
+        single_stoper.put("'", Token_Enum.SINGLE_QOUTE);
+        single_stoper.put("\"", Token_Enum.DOUBLE_QOUTE);
+        single_stoper.put("`", Token_Enum.BACK_TICK);
 
         //for double stoppers
         double_stopper =  new HashMap<>();
@@ -144,7 +154,12 @@ public class Tokenizer{
                             last_ch = temp_str.charAt(temp_str.length()-1);
                         }
                         if(single_stoper.containsKey(String.valueOf(ch))){
-                            if(!temp_str.isEmpty()){
+                            //check if the previous string is a function
+                            if(ch == ':' &&  this.functions.containsKey(temp_str.toString())){
+                                Token tok = new Token(functions.get(temp_str.toString()),temp_str.toString(),line_len);
+                                res.add(tok);
+                            }
+                            else if(!temp_str.isEmpty()){
                                 Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len);
                                 res.add(tok);
                             }

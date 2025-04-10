@@ -1,4 +1,4 @@
-public class Token {
+public class Token implements Cloneable {
     Tokenizer.Token_Enum token;
     String keyword;
     //TBE
@@ -7,5 +7,9 @@ public class Token {
         this.token = tok;
         this.keyword = str;
         this.line = line;
+    }
+    @Override
+    public Object clone() throws CloneNotSupportedException{
+        return super.clone();
     }
 }

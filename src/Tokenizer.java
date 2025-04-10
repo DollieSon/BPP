@@ -38,29 +38,22 @@ public class Tokenizer{
     }
 
     private class ExtendedPair{
-        HashMap<Token_Enum,Token_Enum> pair;
-        Token_Enum orig_enum;
-        String possible_string;
-        Token_Enum sec_enum;
-        String third_string;
-        Token_Enum third_enum;
-        public ExtendedPair(String ch,Token_Enum orig,Token_Enum second){
-            possible_string = ch;
-            orig_enum = orig;
-            sec_enum = second;
-            third_string = new String();
+        Token orig_tok;
+        HashMap<String,Token> pair;
+        public ExtendedPair(Token orig){
+            orig_tok = orig;
+            pair = new HashMap<>();
         }
-        public void Add_Third(String st, Token_Enum third){
-            third_string = st;
-            third_enum = third;
+        // if for = then string should be
+        public void add_pair(String sign,Token towken){
+            pair.put(sign,towken);
         }
-        public Token_Enum getEnum(String str){
-            if(str.equals(possible_string)){
-                return sec_enum;
-            }else if (!this.third_string.isEmpty() && third_string.equals(str)){
-                return third_enum;
+        public void getEnum(ArrayList<Token> res_list,char ch,StringBuilder sb){
+            Token top = res_list.remove(res_list.size()-1);
+            if(pair.containsKey(top.keyword)){
+
             }else{
-                return Token_Enum.ERROR_TOKEN;
+
             }
         }
     }

@@ -25,7 +25,7 @@ public class Parser {
                 program.statements.add(parseVariableDeclaration());
             } else if (match(Tokenizer.Token_Enum.PRINT_FUNC)) {
                 System.out.println("2");
-                parsePrintStatement();
+                program.statements.add(parsePrintStatement());
             } else if (check(Tokenizer.Token_Enum.VARIABLE_NAME)) {
                 System.out.println("3");
                 parseAssignment();
@@ -107,40 +107,32 @@ public class Parser {
         return declNode;
     }
 
-    // Helper method to parse values (numbers, characters, booleans)
-    private Object parseValue() {
-        Token token = advance();
-        if (token.token == Tokenizer.Token_Enum.BACK_TICK ||
-                token.token == Tokenizer.Token_Enum.DOUBLE_QOUTE) {
-            Token valueToken = advance(); // Get the actual value (`n`, `OO`)
-            advance(); // Skip closing quote/backtick
-            return valueToken.keyword; // Or convert to Character/Boolean
-        }
-        return token.keyword; // For numbers (e.g., `5`)
-    }
+    private PrintNode parsePrintStatement() {
+        PrintNode printNode = new PrintNode();
 
-    private void parsePrintStatement() {
-//        System.out.println("asfk;jasklhjf");
-//        // Step 1: Ensure the colon (`:`) is present after `IPAKITA`
-////        if (!match(Tokenizer.Token_Enum.COLON)) {
-////            error("Expected ':' after IPAKITA");
-////        }
-//
-//        // Step 2: Collect print expressions
-//        ArrayList<String> expressions = new ArrayList<>();
-//        do {
-//            if (match(Tokenizer.Token_Enum.VARIABLE_NAME) || match(Tokenizer.Token_Enum.PRINT_FUNC)) {
-//                expressions.add(previous().keyword);
-//            } else if (match(Tokenizer.Token_Enum.ERROR_TOKEN)) {
-//                error("Invalid print expression");
-//            } else {
-//                error("Expected a variable, string, or number after IPAKITA:");
-//            }
-//        } while (match(Tokenizer.Token_Enum.CONCAT_OPP)); // `&` is the concatenation operator
-//
-//        // Step 3: Output parsed print statement
-//        System.out.println("Print Statement: " + String.join(" & ", expressions));
-        processStatement();
+        System.out.println("CURRENT: " + tokens.get(current).keyword);
+
+        // Skip the colon (if present)
+       if (!match(Tokenizer.Token_Enum.COLON)){
+           error("Expected a colon after IPAKITA'");
+        }
+
+        // Parse expressions separated by '&' (concatenation)
+        do {
+            if (check(Tokenizer.Token_Enum.VARIABLE_NAME)) {
+                Token varToken = advance();
+                printNode.addExpression(varToken.keyword);
+            }
+            else if (check(Tokenizer.Token_Enum.DOUBLE_QOUTE) || check(Tokenizer.Token_Enum.BACK_TICK) || check(Tokenizer.Token_Enum.BRACKET_OPEN)) {
+                // Handle string literals (e.g., "last")
+                advance(); // Skip opening quote
+                Token strToken = advance();
+                printNode.addExpression(strToken.keyword);
+                advance(); // Skip closing quote
+            }
+        } while (match(Tokenizer.Token_Enum.CONCAT_OPP)); // Continue if there's '&'
+
+        return printNode;
     }
 
     private void parseAssignment() {

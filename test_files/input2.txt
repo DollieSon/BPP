@@ -5,5 +5,5 @@ SUGOD
 	a__1=`c`
 	x=y=4
 	-- this is a comment
-	IPAKITA: x & y & z & $ & a_1 & [#] & "last"
+	IPAKITA x & y & z & $ & a_1 & [#] & "last"
 KATAPUSAN

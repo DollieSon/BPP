@@ -37,37 +37,10 @@ public class Tokenizer{
         FOR_LOOP
     }
 
-    private class ExtendedPair{
-        HashMap<Token_Enum,Token_Enum> pair;
-        Token_Enum orig_enum;
-        String possible_string;
-        Token_Enum sec_enum;
-        String third_string;
-        Token_Enum third_enum;
-        public ExtendedPair(String ch,Token_Enum orig,Token_Enum second){
-            possible_string = ch;
-            orig_enum = orig;
-            sec_enum = second;
-            third_string = new String();
-        }
-        public void Add_Third(String st, Token_Enum third){
-            third_string = st;
-            third_enum = third;
-        }
-        public Token_Enum getEnum(String str){
-            if(str.equals(possible_string)){
-                return sec_enum;
-            }else if (!this.third_string.isEmpty() && third_string.equals(str)){
-                return third_enum;
-            }else{
-                return Token_Enum.ERROR_TOKEN;
-            }
-        }
-    }
-
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
     HashMap<String, Token_Enum> functions;
+    HashMap<String, ExtendedPair> complex_pair;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
         keyword_pairs.put("SUGOD", Token_Enum.PROGRAM_START);
@@ -104,6 +77,25 @@ public class Tokenizer{
         single_stoper.put("'", Token_Enum.SINGLE_QOUTE);
         single_stoper.put("\"", Token_Enum.DOUBLE_QOUTE);
         single_stoper.put("`", Token_Enum.BACK_TICK);
+        single_stoper.put("<", Token_Enum.LESS_THAN);
+
+        ExtendedPair ep1 = new ExtendedPair(new Token(Token_Enum.SUB_OPP,"-",-1));
+        ep1.add_pair("-",new Token(Token_Enum.COMMENT_SIGN,"--",-1));
+
+        ExtendedPair ep2 = new ExtendedPair(new Token(Token_Enum.GREATER_THAN,">",-1));
+        ep2.add_pair("<",new Token(Token_Enum.NOT_EQUAL,"<>",-1));
+
+        ExtendedPair ep3 = new ExtendedPair(new Token(Token_Enum.EQUAL_ASSIGN,"=",-1));
+        ep3.add_pair("=",new Token(Token_Enum.EQUALTO_OPP,"==",-1));
+        ep3.add_pair("<",new Token(Token_Enum.LT_EQUAL,"<=",-1));
+        ep3.add_pair(">",new Token(Token_Enum.GT_EQUAL,">=",-1));
+
+        complex_pair = new HashMap<>();
+
+        complex_pair.put("-",ep1);
+        complex_pair.put(">",ep2);
+        complex_pair.put("=",ep3);
+
     }
 
     /*Algorithm
@@ -151,75 +143,16 @@ public class Tokenizer{
                             res.add(new Token(tok,String.valueOf(ch),line_len));
                             continue;
                         }
-                        //bruteforce approach
-                        if(ch == '=' && !res.isEmpty()){
-                            Token top_tok = res.remove(res.size()-1); // topmost token
-                            switch (top_tok.token){
-                                case EQUAL_ASSIGN -> {
-                                    Token tok = new Token(Token_Enum.EQUALTO_OPP,"==",line_len);
-                                    res.add(tok);
-                                    break;
-                                }
-                                case LESS_THAN -> {
-                                    Token tok = new Token(Token_Enum.LT_EQUAL,"<=",line_len);
-                                    res.add(tok);
-                                    break;
-                                }
-                                case GREATER_THAN -> {
-                                    Token tok = new Token(Token_Enum.GT_EQUAL,">=",line_len);
-                                    res.add(tok);
-                                    break;
-                                }
-                                default -> {
-                                    res.add(top_tok);
-                                    if(!temp_str.isEmpty()){
-                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
-                                        temp_str = new StringBuilder();
-                                    }
-                                    Token tok = new Token(Token_Enum.EQUAL_ASSIGN,"=",line_len);
-                                    res.add(tok);
-                                    break;
-                                }
+                        else if(complex_pair.containsKey(String.valueOf(ch))){
+                            ExtendedPair ep = complex_pair.get(String.valueOf(ch));
+                            ep.getEnum(res,ch,temp_str,line_len);
+                            Token ehe_tok = res.remove(res.size()-1);
+                            if(ehe_tok.token == Token_Enum.COMMENT_SIGN){
+                                is_comment = true;
                             }
-                            continue;
+                            res.add(ehe_tok);
                         }
-                        if(ch == '>'){
-                            Token top_tok = res.remove(res.size()-1); // topmost token
-                            switch (top_tok.token){
-                                case LESS_THAN -> {
-                                    Token tok = new Token(Token_Enum.NOT_EQUAL,"<>",line_len);
-                                    res.add(tok);
-                                }
-                                default -> {
-                                    res.add(top_tok);
-                                    if(!temp_str.isEmpty()){
-                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
-                                        temp_str = new StringBuilder();
-                                    }
-                                    Token tok = new Token(Token_Enum.GREATER_THAN,">",line_len);
-                                }
-                            }
-                        }
-                        if(ch=='-'){
-                            Token top_tok = res.remove(res.size()-1); // topmost token
-                            switch (top_tok.token){
-                                case SUB_OPP -> {
-                                    Token tok = new Token(Token_Enum.COMMENT_SIGN,"--",line_len);
-                                    is_comment = true;
-                                    res.add(tok);
-                                }
-                                default -> {
-                                    res.add(top_tok);
-                                    if(!temp_str.isEmpty()){
-                                        res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(), line_len));
-                                        temp_str = new StringBuilder();
-                                    }
-                                    Token tok = new Token(Token_Enum.SUB_OPP,"-",line_len);
-                                    res.add(tok);
-                                }
-                            }
-                        }
-                        temp_str.append(ch);
+                        else temp_str.append(ch);
                     }
                     if(!temp_str.isEmpty() && !is_comment){
                         res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len));

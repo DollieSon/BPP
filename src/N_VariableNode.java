@@ -1,8 +1,19 @@
-public class N_VariableNode {
+public class N_VariableNode extends N_ASTNode {
     public String name;
-    public Object value; // Integer, Character, Boolean, etc.
+    public N_ASTNode value;  // Initialize as null for declarations without assignment
 
-    // In VariableNode.java
+    // Add constructor
+    public N_VariableNode(String name) {
+        this.name = name;
+        this.value = null;
+    }
+
+    // Optional: Add constructor with value for declarations with assignment
+    public N_VariableNode(String name, N_ASTNode value) {
+        this.name = name;
+        this.value = value;
+    }
+
     @Override
     public String toString() {
         return "Variable: " + name + (value != null ? " = " + value : "");

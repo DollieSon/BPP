@@ -1,5 +1,5 @@
-import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Parser {
     private ArrayList<Token> tokens;
@@ -9,8 +9,8 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public ProgramNode parse() {
-        ProgramNode program = new ProgramNode();
+    public N_ProgramNode parse() {
+        N_ProgramNode program = new N_ProgramNode();
         if (!isAtStart(Tokenizer.Token_Enum.PROGRAM_START)) {
             //Maybe static var para ma change change ra ang word na sugod and katapusan and stuff
             error("Expected SUGOD at the beginning");
@@ -28,7 +28,7 @@ public class Parser {
                 program.statements.add(parsePrintStatement());
             } else if (check(Tokenizer.Token_Enum.VARIABLE_NAME)) {
                 System.out.println("3");
-                parseAssignment();
+                program.statements.add(parseAssignment());
             } else {
                 System.out.println("99");
                 processStatement(); // Placeholder for future statements
@@ -46,12 +46,14 @@ public class Parser {
         return program;
     }
 
-    private VariableDeclarationNode parseVariableDeclaration() {
-        VariableDeclarationNode declNode = new VariableDeclarationNode();
+    private N_VariableDeclarationNode parseVariableDeclaration() {
+        //MUDAWAT SIYAG NUM VARNAME
+
+        N_VariableDeclarationNode declNode = new N_VariableDeclarationNode();
         declNode.type = advance().token; // NUMERO, LETRA, etc.
 
         do {
-            VariableNode varNode = new VariableNode();
+            N_VariableNode varNode = new N_VariableNode();
             varNode.name = advance().keyword; // Variable name (e.g., "x")
 
             if (match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
@@ -107,8 +109,8 @@ public class Parser {
         return declNode;
     }
 
-    private PrintNode parsePrintStatement() {
-        PrintNode printNode = new PrintNode();
+    private N_PrintNode parsePrintStatement() {
+        N_PrintNode printNode = new N_PrintNode();
 
         System.out.println("CURRENT: " + tokens.get(current).keyword);
 
@@ -135,36 +137,58 @@ public class Parser {
         return printNode;
     }
 
-    private void parseAssignment() {
-//        // Step 1: Start with a variable
-//        Token varToken = advance(); // consume variable
-//        if (!match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
-//            error("Expected '=' after variable name for assignment");
-//            return;
-//        }
-//
-//        // Step 2: Support chaining (e.g., x = y = 4)
-//        ArrayList<String> chain = new ArrayList<>();
-//        chain.add(varToken.keyword);
-//
-//        // Keep processing if there's another VARIABLE and EQUAL_ASSIGN
-//        while (match(Tokenizer.Token_Enum.VARIABLE_NAME) && match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
-//            chain.add(previous().keyword);
-//        }
-//
-//        // Step 3: Expect a value at the end
-//        if (match(Tokenizer.Token_Enum.INT_TYPE) ||
-//                match(Tokenizer.Token_Enum.CHAR_TYPE) ||
-//                match(Tokenizer.Token_Enum.FLOAT_TYPE) ||
-//                match(Tokenizer.Token_Enum.BOOL_TYPE) ||
-//                match(Tokenizer.Token_Enum.VARIABLE_NAME)) {
-//
-//            String finalValue = previous().keyword;
-//            System.out.println("Variable Assignment: " + String.join(" = ", chain) + " = " + finalValue);
-//        } else {
-//            error("Expected a literal or variable after '='");
-//        }
-        processStatement();
+    private N_AssignmentNode parseAssignment() {
+        //ISSUE: DI PA MU ERROR ANG x=4=5
+
+        List<String> variables = new ArrayList<>();
+        Object finalValue = null;
+
+        // First variable is mandatory
+        Token firstVar = advance();
+        variables.add(firstVar.keyword);
+
+        // Handle chained assignments (x = y = 4)
+        while (match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
+            if (isAtEnd()) {
+                error("Expected value after '='");
+            }
+
+            // Peek next token
+            Token nextToken = tokens.get(current);
+
+            // Case 1: Next is another variable (continue chaining)
+            if (nextToken.token == Tokenizer.Token_Enum.VARIABLE_NAME &&
+                    !isNumeric(nextToken.keyword)) {  // Skip if it's a number
+                Token nextVar = advance();
+                variables.add(nextVar.keyword);
+            }
+            // Case 2: Next is a value (end chaining)
+            else {
+                finalValue = parseValue();
+                break;
+            }
+        }
+
+        // Build assignments right-to-left (x = (y = 4))
+        N_AssignmentNode lastAssignment = new N_AssignmentNode(
+                variables.get(variables.size()-1),
+                finalValue
+        );
+
+        for (int i = variables.size()-2; i >= 0; i--) {
+            lastAssignment = new N_AssignmentNode(variables.get(i), lastAssignment);
+        }
+
+        // Debug print
+        System.out.println("Assignment: " +
+                String.join(" = ", variables) + " = " + finalValue);
+
+        return lastAssignment;
+    }
+
+    // Helper: Check if a string is numeric
+    private boolean isNumeric(String str) {
+        return str.matches("-?\\d+(\\.\\d+)?");  // Handles integers and decimals
     }
 
     private void processStatement() {
@@ -202,6 +226,22 @@ public class Parser {
     private Token advance() {
         if (!isAtEnd()) processStatement();  // Move to the next token
         return previous();  // Return the token we just moved past
+    }
+
+    private Object parseValue() {
+        Token token = advance();
+
+        // Handle quoted values
+        if (token.token == Tokenizer.Token_Enum.BACK_TICK ||
+                token.token == Tokenizer.Token_Enum.DOUBLE_QOUTE) {
+
+            Token valueToken = advance(); // Get actual value
+            advance(); // Skip closing quote
+            return valueToken.keyword;
+        }
+
+        // Handle plain values (numbers, variables)
+        return token.keyword;
     }
 
     public void setTokens(ArrayList<Token> newTokens) {

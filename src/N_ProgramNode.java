@@ -3,7 +3,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProgramNode {
+public class N_ProgramNode {
     public List<Object> statements = new ArrayList<>(); // Store any statement type here
 
     @Override

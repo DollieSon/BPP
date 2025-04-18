@@ -1,4 +1,4 @@
-public class VariableNode {
+public class N_VariableNode {
     public String name;
     public Object value; // Integer, Character, Boolean, etc.
 

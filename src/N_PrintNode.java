@@ -1,17 +1,17 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrintNode {
+public class N_PrintNode {
     private final List<Object> expressions; // Can be variables, strings, or special symbols ($, [])
 
     // In ProgramNode.java
     private List<Object> statements = new ArrayList<>();
 
-    public void addPrintStatement(PrintNode printNode) {
+    public void addPrintStatement(N_PrintNode printNode) {
         statements.add(printNode);
     }
 
-    public PrintNode() {
+    public N_PrintNode() {
         this.expressions = new ArrayList<>();
     }
 

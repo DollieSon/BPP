@@ -47,143 +47,219 @@ public class Parser {
     }
 
     private N_VariableDeclarationNode parseVariableDeclaration() {
-        //MUDAWAT SIYAG NUM VARNAME
-
         N_VariableDeclarationNode declNode = new N_VariableDeclarationNode();
         declNode.type = advance().token; // NUMERO, LETRA, etc.
 
         do {
-            N_VariableNode varNode = new N_VariableNode();
-            varNode.name = advance().keyword; // Variable name (e.g., "x")
+            // Use parameterized constructor
+            N_VariableNode varNode = new N_VariableNode(advance().keyword);
 
             if (match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
-                if (isAtEnd()) {
-                    error("Expected a value after '='");
-                }
-
-                // Handle initialization value
-                Token valueToken = advance();
-                Object value = valueToken.keyword;
-
-                // Handle quoted/backticked values (e.g., `n`, "OO")
-                if (valueToken.token == Tokenizer.Token_Enum.BACK_TICK ||
-                        valueToken.token == Tokenizer.Token_Enum.DOUBLE_QOUTE ||
-                        valueToken.token == Tokenizer.Token_Enum.SINGLE_QOUTE) {
-                    if (isAtEnd()) {
-                        error("Unclosed quote/backtick");
-                    }
-
-                    Token openingSymbol = valueToken;
-
-                    valueToken = advance(); // Get the actual value (e.g., `n`, `OO`)
-                    value = valueToken.keyword;
-
-                    valueToken = openingSymbol;
-
-                    // Skip closing quote/backtick
-                    Tokenizer.Token_Enum expectedClosingToken;
-                    if (valueToken.token == Tokenizer.Token_Enum.BACK_TICK) {
-                        expectedClosingToken = Tokenizer.Token_Enum.BACK_TICK;
-                    } else if (valueToken.token == Tokenizer.Token_Enum.SINGLE_QOUTE) {
-                        expectedClosingToken = Tokenizer.Token_Enum.SINGLE_QOUTE;
-                    } else {
-                        expectedClosingToken = Tokenizer.Token_Enum.DOUBLE_QOUTE;
-                    }
-
-                    if (!match(expectedClosingToken)) {
-                        error("Expected closing " +
-                                (expectedClosingToken == Tokenizer.Token_Enum.BACK_TICK ? "backtick" :
-                                        expectedClosingToken == Tokenizer.Token_Enum.SINGLE_QOUTE ? "single quote" : "double quote"));
-                    }
-                }
-
-                varNode.value = value;
-                System.out.println("Variable Declaration: [" + varNode.name + "] = " + value);
+                varNode.value = parseExpression();
+                System.out.println("Variable Declaration: [" + varNode.name + "] = " + varNode.value);
             } else {
                 System.out.println("Variable Declaration: [" + varNode.name + "]");
             }
-
             declNode.variables.add(varNode);
         } while (match(Tokenizer.Token_Enum.COMMA));
 
         return declNode;
     }
 
+    private N_AssignmentNode parseAssignment() {
+        String varName = advance().keyword; // Get variable name
+        match(Tokenizer.Token_Enum.EQUAL_ASSIGN); // Consume '='
+
+        // Parse the full expression
+        N_ASTNode expr = parseExpression();
+
+        System.out.println("Assignment: " + varName + " = " + expr);
+        return new N_AssignmentNode(varName, expr);
+    }
+
     private N_PrintNode parsePrintStatement() {
         N_PrintNode printNode = new N_PrintNode();
 
-        System.out.println("CURRENT: " + tokens.get(current).keyword);
-
-        // Skip the colon (if present)
-       if (!match(Tokenizer.Token_Enum.COLON)){
-           error("Expected a colon after IPAKITA'");
+        // Skip the colon
+        if (!match(Tokenizer.Token_Enum.COLON)) {
+            error("Expected a colon after IPAKITA");
         }
 
-        // Parse expressions separated by '&' (concatenation)
+        // Parse expressions
         do {
             if (check(Tokenizer.Token_Enum.VARIABLE_NAME)) {
                 Token varToken = advance();
-                printNode.addExpression(varToken.keyword);
+                printNode.addExpression(new N_VariableNode(varToken.keyword));  // Wrap in VariableNode
             }
-            else if (check(Tokenizer.Token_Enum.DOUBLE_QOUTE) || check(Tokenizer.Token_Enum.BACK_TICK) || check(Tokenizer.Token_Enum.BRACKET_OPEN)) {
-                // Handle string literals (e.g., "last")
-                advance(); // Skip opening quote
-                Token strToken = advance();
-                printNode.addExpression(strToken.keyword);
-                advance(); // Skip closing quote
+            else if (check(Tokenizer.Token_Enum.DOUBLE_QOUTE) ||
+                    check(Tokenizer.Token_Enum.BACK_TICK) ||
+                    check(Tokenizer.Token_Enum.BRACKET_OPEN)) {
+
+                Token openingToken = advance();
+                Token valueToken = advance();
+
+                // Handle special symbols
+                if (openingToken.token == Tokenizer.Token_Enum.BACK_TICK) {
+                    if (valueToken.keyword.equals("$")) {
+                        printNode.addExpression(new N_LiteralNode("\n"));  // Newline symbol
+                    } else if (valueToken.keyword.equals("[#]")) {
+                        printNode.addExpression(new N_LiteralNode("#"));  // Escape symbol
+                    }
+                }
+                // Handle regular strings
+                else {
+                    printNode.addExpression(new N_LiteralNode(valueToken.keyword));
+                }
+
+                advance(); // Skip closing symbol
             }
-        } while (match(Tokenizer.Token_Enum.CONCAT_OPP)); // Continue if there's '&'
+        } while (match(Tokenizer.Token_Enum.CONCAT_OPP));
 
         return printNode;
     }
 
-    private N_AssignmentNode parseAssignment() {
-        //ISSUE: DI PA MU ERROR ANG x=4=5
+    private N_ASTNode parseExpression() {
+        return parseLogicalOr(); // Start with lowest precedence
+    }
 
-        List<String> variables = new ArrayList<>();
-        Object finalValue = null;
+    // Lowest precedence (O - OR)
+    private N_ASTNode parseLogicalOr() {
+        N_ASTNode node = parseLogicalAnd();
+        while (match(Tokenizer.Token_Enum.OR_BOOL)) {
+            Token op = previous();
+            node = new N_BinaryOpNode(op, node, parseLogicalAnd());
+        }
+        return node;
+    }
 
-        // First variable is mandatory
-        Token firstVar = advance();
-        variables.add(firstVar.keyword);
+    // UG - AND
+    private N_ASTNode parseLogicalAnd() {
+        N_ASTNode node = parseEquality();
+        while (match(Tokenizer.Token_Enum.AND_BOOL)) {
+            Token op = previous();
+            node = new N_BinaryOpNode(op, node, parseEquality());
+        }
+        return node;
+    }
 
-        // Handle chained assignments (x = y = 4)
-        while (match(Tokenizer.Token_Enum.EQUAL_ASSIGN)) {
-            if (isAtEnd()) {
-                error("Expected value after '='");
-            }
-
-            // Peek next token
-            Token nextToken = tokens.get(current);
-
-            // Case 1: Next is another variable (continue chaining)
-            if (nextToken.token == Tokenizer.Token_Enum.VARIABLE_NAME &&
-                    !isNumeric(nextToken.keyword)) {  // Skip if it's a number
-                Token nextVar = advance();
-                variables.add(nextVar.keyword);
-            }
-            // Case 2: Next is a value (end chaining)
-            else {
-                finalValue = parseValue();
+    // ==, <>
+    private N_ASTNode parseEquality() {
+        N_ASTNode node = parseComparison();
+        while (true) {
+            if (match(Tokenizer.Token_Enum.EQUALTO_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseComparison());
+            } else if (match(Tokenizer.Token_Enum.NOT_EQUAL)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseComparison());
+            } else {
                 break;
             }
         }
+        return node;
+    }
 
-        // Build assignments right-to-left (x = (y = 4))
-        N_AssignmentNode lastAssignment = new N_AssignmentNode(
-                variables.get(variables.size()-1),
-                finalValue
-        );
+    // >, <, >=, <=
+    private N_ASTNode parseComparison() {
+        N_ASTNode node = parseAddSub();
+        while (true) {
+            if (match(Tokenizer.Token_Enum.GREATER_THAN)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseAddSub());
+            } else if (match(Tokenizer.Token_Enum.LESS_THAN)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseAddSub());
+            } else if (match(Tokenizer.Token_Enum.GT_EQUAL)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseAddSub());
+            } else if (match(Tokenizer.Token_Enum.LT_EQUAL)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseAddSub());
+            } else {
+                break;
+            }
+        }
+        return node;
+    }
 
-        for (int i = variables.size()-2; i >= 0; i--) {
-            lastAssignment = new N_AssignmentNode(variables.get(i), lastAssignment);
+    // +, -
+    private N_ASTNode parseAddSub() {
+        N_ASTNode node = parseMulDivMod();
+        while (true) {
+            if (match(Tokenizer.Token_Enum.ADD_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseMulDivMod());
+            } else if (match(Tokenizer.Token_Enum.SUB_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseMulDivMod());
+            } else {
+                break;
+            }
+        }
+        return node;
+    }
+
+    // *, /, %
+    private N_ASTNode parseMulDivMod() {
+        N_ASTNode node = parseUnary();
+        while (true) {
+            if (match(Tokenizer.Token_Enum.MUL_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseUnary());
+            } else if (match(Tokenizer.Token_Enum.DIV_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseUnary());
+            } else if (match(Tokenizer.Token_Enum.MOD_OPP)) {
+                Token op = previous();
+                node = new N_BinaryOpNode(op, node, parseUnary());
+            } else {
+                break;
+            }
+        }
+        return node;
+    }
+
+    // +, -, DILI (unary)
+    private N_ASTNode parseUnary() {
+        if (match(Tokenizer.Token_Enum.SUB_OPP)) {
+            Token op = previous();
+            return new N_UnaryOpNode(op, parseUnary());
+        } else if (match(Tokenizer.Token_Enum.ADD_OPP)) {
+            Token op = previous();
+            return new N_UnaryOpNode(op, parseUnary());
+        }
+        //WALA PAY DILI
+//        else if (match(Tokenizer.Token_Enum.NOT_BOOL)) { // DILI
+//            Token op = previous();
+//            return new N_UnaryOpNode(op, parseUnary());
+//        }
+        return parsePrimary();
+    }
+
+    // Base case (variables, literals, parentheses)
+    private N_ASTNode parsePrimary() {
+        if (match(Tokenizer.Token_Enum.PAREN_OPEN)) {
+            N_ASTNode expr = parseExpression();
+            if (!match(Tokenizer.Token_Enum.PAREN_CLOSE)) {
+                error("Missing closing parenthesis");
+            }
+            return expr;
         }
 
-        // Debug print
-        System.out.println("Assignment: " +
-                String.join(" = ", variables) + " = " + finalValue);
-
-        return lastAssignment;
+        Token token = advance();
+        switch (token.token) {
+            case VARIABLE_NAME:
+                return new N_VariableNode(token.keyword);
+            case INT_TYPE:  // Make sure your tokenizer emits these
+                return new N_LiteralNode(Integer.parseInt(token.keyword));
+            case FLOAT_TYPE:
+                return new N_LiteralNode(Double.parseDouble(token.keyword));
+            case BOOL_TYPE:
+                return new N_LiteralNode(token.keyword.equals("OO"));
+            default:
+                error("Expected expression");
+                return null;
+        }
     }
 
     // Helper: Check if a string is numeric

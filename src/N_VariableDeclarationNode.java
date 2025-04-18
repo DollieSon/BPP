@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class N_VariableDeclarationNode {
+public class N_VariableDeclarationNode extends N_ASTNode{
     public Tokenizer.Token_Enum type;
     public List<N_VariableNode> variables = new ArrayList<>();
 

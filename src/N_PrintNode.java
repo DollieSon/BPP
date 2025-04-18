@@ -1,21 +1,14 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class N_PrintNode {
-    private final List<Object> expressions; // Can be variables, strings, or special symbols ($, [])
-
-    // In ProgramNode.java
-    private List<Object> statements = new ArrayList<>();
-
-    public void addPrintStatement(N_PrintNode printNode) {
-        statements.add(printNode);
-    }
+public class N_PrintNode extends N_ASTNode {
+    private final List<N_ASTNode> expressions;  // Changed from Object to N_ASTNode
 
     public N_PrintNode() {
         this.expressions = new ArrayList<>();
     }
 
-    public void addExpression(Object expr) {
+    public void addExpression(N_ASTNode expr) {
         expressions.add(expr);
     }
 
@@ -23,7 +16,7 @@ public class N_PrintNode {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Print:\n");
-        for (Object expr : expressions) {
+        for (N_ASTNode expr : expressions) {
             sb.append("  ").append(expr).append("\n");
         }
         return sb.toString();

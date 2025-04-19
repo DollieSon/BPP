@@ -9,6 +9,6 @@ public class N_AssignmentNode extends N_ASTNode {  // Now extends N_ASTNode
 
     @Override
     public String toString() {
-        return String.format("Assignment: %s = %s", variableName, value);
+        return String.format("Assignment: %s = %s\n", variableName, value);
     }
 }

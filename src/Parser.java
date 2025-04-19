@@ -42,11 +42,14 @@ public class Parser {
 
         System.out.println("Parsing successful!");
 
-        System.out.println("TREE: " + program);
+        System.out.println("TREE: \n" + program);
         return program;
     }
 
     private N_VariableDeclarationNode parseVariableDeclaration() {
+        //KUWANG VALIDATION LIKE FOR LETRA NA 'C' kay ma assign sa '
+        //TYPE VALIDATION
+
         N_VariableDeclarationNode declNode = new N_VariableDeclarationNode();
         declNode.type = advance().token; // NUMERO, LETRA, etc.
 
@@ -67,6 +70,8 @@ public class Parser {
     }
 
     private N_AssignmentNode parseAssignment() {
+        //TYPE VALIDATION
+        //WALA PA PANG CHECK IF NANA BA NI NA VARIABLE AND IF GI ASSIGN NA BA
         String varName = advance().keyword; // Get variable name
         match(Tokenizer.Token_Enum.EQUAL_ASSIGN); // Consume '='
 

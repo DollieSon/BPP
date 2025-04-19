@@ -11,6 +11,9 @@ public class N_BinaryOpNode extends N_ASTNode {
 
     @Override
     public String toString() {
-        return String.format("(%s %s %s)", left, operator.keyword, right);
+        return String.format("(%s %s %s)",
+                left.toString(),
+                operator.keyword,
+                right.toString());
     }
 }

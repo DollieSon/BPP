@@ -17,7 +17,7 @@ public class N_PrintNode extends N_ASTNode {
         StringBuilder sb = new StringBuilder();
         sb.append("Print:\n");
         for (N_ASTNode expr : expressions) {
-            sb.append("  ").append(expr).append("\n");
+            sb.append(expr);
         }
         return sb.toString();
     }

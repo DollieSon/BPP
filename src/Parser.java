@@ -262,11 +262,6 @@ public class Parser {
         }
     }
 
-    // Helper: Check if a string is numeric
-    private boolean isNumeric(String str) {
-        return str.matches("-?\\d+(\\.\\d+)?");  // Handles integers and decimals
-    }
-
     private void processStatement() {
 //        System.out.println("Processing: " + tokens.get(current).keyword);
 //        System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
@@ -302,22 +297,6 @@ public class Parser {
     private Token advance() {
         if (!isAtEnd()) processStatement();  // Move to the next token
         return previous();  // Return the token we just moved past
-    }
-
-    private Object parseValue() {
-        Token token = advance();
-
-        // Handle quoted values
-        if (token.token == Tokenizer.Token_Enum.BACK_TICK ||
-                token.token == Tokenizer.Token_Enum.DOUBLE_QOUTE) {
-
-            Token valueToken = advance(); // Get actual value
-            advance(); // Skip closing quote
-            return valueToken.keyword;
-        }
-
-        // Handle plain values (numbers, variables)
-        return token.keyword;
     }
 
     public void setTokens(ArrayList<Token> newTokens) {

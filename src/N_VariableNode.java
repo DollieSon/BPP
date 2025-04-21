@@ -16,6 +16,6 @@ public class N_VariableNode extends N_ASTNode {
 
     @Override
     public String toString() {
-        return "Variable: " + name + (value != null ? " = " + value : "");
+        return name; // Simplified to just show the name
     }
 }

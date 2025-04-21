@@ -13,7 +13,8 @@ public class Main {
             Tokenizer tok = new Tokenizer();
             ArrayList<Token> res = tok.tokenize(input);
             Parser parser = new Parser(res);
-            parser.parse();
+            N_ProgramNode program = parser.parse();
+            System.out.println(program);
             System.out.println("Done");
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

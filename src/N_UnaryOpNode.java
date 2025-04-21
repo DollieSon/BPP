@@ -9,6 +9,8 @@ public class N_UnaryOpNode extends N_ASTNode {
 
     @Override
     public String toString() {
-        return String.format("(%s%s)", operator.keyword, operand);
+        return String.format("(%s%s)",
+                operator.keyword,
+                operand.toString());
     }
 }

@@ -7,6 +7,6 @@ public class N_LiteralNode extends N_ASTNode {
 
     @Override
     public String toString() {
-        return value.toString();
+        return String.valueOf(value);
     }
 }

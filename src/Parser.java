@@ -42,11 +42,14 @@ public class Parser {
 
         System.out.println("Parsing successful!");
 
-        System.out.println("TREE: " + program);
+        System.out.println("TREE: \n" + program);
         return program;
     }
 
     private N_VariableDeclarationNode parseVariableDeclaration() {
+        //KUWANG VALIDATION LIKE FOR LETRA NA 'C' kay ma assign sa '
+        //TYPE VALIDATION
+
         N_VariableDeclarationNode declNode = new N_VariableDeclarationNode();
         declNode.type = advance().token; // NUMERO, LETRA, etc.
 
@@ -67,6 +70,8 @@ public class Parser {
     }
 
     private N_AssignmentNode parseAssignment() {
+        //TYPE VALIDATION
+        //WALA PA PANG CHECK IF NANA BA NI NA VARIABLE AND IF GI ASSIGN NA BA
         String varName = advance().keyword; // Get variable name
         match(Tokenizer.Token_Enum.EQUAL_ASSIGN); // Consume '='
 
@@ -262,11 +267,6 @@ public class Parser {
         }
     }
 
-    // Helper: Check if a string is numeric
-    private boolean isNumeric(String str) {
-        return str.matches("-?\\d+(\\.\\d+)?");  // Handles integers and decimals
-    }
-
     private void processStatement() {
 //        System.out.println("Processing: " + tokens.get(current).keyword);
 //        System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
@@ -302,22 +302,6 @@ public class Parser {
     private Token advance() {
         if (!isAtEnd()) processStatement();  // Move to the next token
         return previous();  // Return the token we just moved past
-    }
-
-    private Object parseValue() {
-        Token token = advance();
-
-        // Handle quoted values
-        if (token.token == Tokenizer.Token_Enum.BACK_TICK ||
-                token.token == Tokenizer.Token_Enum.DOUBLE_QOUTE) {
-
-            Token valueToken = advance(); // Get actual value
-            advance(); // Skip closing quote
-            return valueToken.keyword;
-        }
-
-        // Handle plain values (numbers, variables)
-        return token.keyword;
     }
 
     public void setTokens(ArrayList<Token> newTokens) {

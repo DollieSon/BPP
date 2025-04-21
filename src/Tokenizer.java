@@ -27,7 +27,7 @@ public class Tokenizer{
         ERROR_TOKEN,
 
         //Stoppers or Separators
-        COMMA,COLON,PAREN_OPEN,PAREN_CLOSE,
+        COMMA,COLON,PAREN_OPEN,PAREN_CLOSE,SINGLE_QOUTE,DOUBLE_QOUTE,BRACKET_OPEN,BRACKET_CLOSE,BACK_TICK,
 
         //Fixed Functions
         PRINT_FUNC,INPUT_FUNC,
@@ -37,38 +37,10 @@ public class Tokenizer{
         FOR_LOOP
     }
 
-
-    private class ExtendedPair{
-        Token_Enum orig_enum;
-        String possible_string;
-        Token_Enum sec_enum;
-        String third_string;
-        Token_Enum third_enum;
-        public ExtendedPair(String ch,Token_Enum orig,Token_Enum second){
-            possible_string = ch;
-            orig_enum = orig;
-            sec_enum = second;
-            third_string = new String();
-        }
-        public void Add_Third(String st, Token_Enum third){
-            third_string = st;
-            third_enum = third;
-        }
-        public Token_Enum getEnum(String str){
-            if(str.equals(possible_string)){
-                return sec_enum;
-            }else if (!this.third_string.isEmpty() && third_string.equals(str)){
-                return third_enum;
-            }else{
-                return Token_Enum.ERROR_TOKEN;
-            }
-        }
-    }
-
-
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
-    HashMap<Character,ExtendedPair> double_stopper;
+    HashMap<String, Token_Enum> functions;
+    HashMap<String, ExtendedPair> complex_pair;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
         keyword_pairs.put("SUGOD", Token_Enum.PROGRAM_START);
@@ -82,8 +54,12 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
-        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
+
+        //for functions
+        functions = new HashMap<>();
+        functions.put("IPAKITA", Token_Enum.PRINT_FUNC);
+        functions.put("DAWAT", Token_Enum.INPUT_FUNC);
+
 
         //for single stoppers
         single_stoper = new HashMap<>();
@@ -96,17 +72,41 @@ public class Tokenizer{
         single_stoper.put("%", Token_Enum.MOD_OPP);
         single_stoper.put("+", Token_Enum.ADD_OPP);
         single_stoper.put("&", Token_Enum.CONCAT_OPP);
+        single_stoper.put("[", Token_Enum.BRACKET_OPEN);
+        single_stoper.put("]", Token_Enum.BRACKET_CLOSE);
+        single_stoper.put("'", Token_Enum.SINGLE_QOUTE);
+        single_stoper.put("\"", Token_Enum.DOUBLE_QOUTE);
+        single_stoper.put("`", Token_Enum.BACK_TICK);
+        single_stoper.put("<", Token_Enum.LESS_THAN);
 
-        //for double stoppers
-        double_stopper =  new HashMap<>();
-        double_stopper.put('=',new ExtendedPair("==",Token_Enum.EQUAL_ASSIGN,Token_Enum.EQUALTO_OPP));
-        ExtendedPair lt = new ExtendedPair("<=",Token_Enum.LESS_THAN,Token_Enum.LT_EQUAL);
-        lt.Add_Third("<>",Token_Enum.NOT_EQUAL);
-        double_stopper.put('<',lt);
-        double_stopper.put('>',new ExtendedPair(">=",Token_Enum.GREATER_THAN,Token_Enum.GT_EQUAL));
-        double_stopper.put('-',new ExtendedPair("--",Token_Enum.SUB_OPP,Token_Enum.COMMENT_SIGN));
+        ExtendedPair ep1 = new ExtendedPair(new Token(Token_Enum.SUB_OPP,"-",-1));
+        ep1.add_pair("-",new Token(Token_Enum.COMMENT_SIGN,"--",-1));
+
+        ExtendedPair ep2 = new ExtendedPair(new Token(Token_Enum.GREATER_THAN,">",-1));
+        ep2.add_pair("<",new Token(Token_Enum.NOT_EQUAL,"<>",-1));
+
+        ExtendedPair ep3 = new ExtendedPair(new Token(Token_Enum.EQUAL_ASSIGN,"=",-1));
+        ep3.add_pair("=",new Token(Token_Enum.EQUALTO_OPP,"==",-1));
+        ep3.add_pair("<",new Token(Token_Enum.LT_EQUAL,"<=",-1));
+        ep3.add_pair(">",new Token(Token_Enum.GT_EQUAL,">=",-1));
+
+        complex_pair = new HashMap<>();
+
+        complex_pair.put("-",ep1);
+        complex_pair.put(">",ep2);
+        complex_pair.put("=",ep3);
 
     }
+
+    /*Algorithm
+        0.Seperate by white space
+        1.Checks For Word-Keywords
+        2.Make StringBuilder (assuming that it is a variable name)
+        3.Checks For Single Characters Keywords (:, +, *, /)
+        3.1Checks For Double Character Keywords  (==, <>, <=)
+        3.2a if found dump StringBuilder and keyword
+        3.2b else Put char on a stringBuilder and repeat step 3
+    */
     public ArrayList<Token> tokenize(Scanner input){
         ArrayList<Token> res = new ArrayList<>();
         int line_len = 0;
@@ -128,53 +128,33 @@ public class Tokenizer{
                     StringBuilder temp_str = new StringBuilder();
                     for(char ch : word.toCharArray()){
                         //check if ch is a stoper
-                        //True: add temp_str to tok as var
-                        char last_ch = 'X';
-                        if (!temp_str.isEmpty())   {
-                            last_ch = temp_str.charAt(temp_str.length()-1);
-                        }
                         if(single_stoper.containsKey(String.valueOf(ch))){
-                            if(!temp_str.isEmpty()){
+                            //check if the previous string is a function
+                            if(ch == ':' &&  this.functions.containsKey(temp_str.toString())){
+                                Token tok = new Token(functions.get(temp_str.toString()),temp_str.toString(),line_len);
+                                res.add(tok);
+                            }
+                            else if(!temp_str.isEmpty()){
                                 Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len);
                                 res.add(tok);
                             }
                             temp_str = new StringBuilder();
                             Token_Enum tok = this.single_stoper.get(String.valueOf(ch));
                             res.add(new Token(tok,String.valueOf(ch),line_len));
+                            continue;
                         }
-                        else if (double_stopper.containsKey(last_ch)){
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(last_ch);
-                            sb.append(ch);
-                            ExtendedPair Ep = double_stopper.get(last_ch);
-                            Token_Enum tok_enum = Ep.getEnum(sb.toString());
-                            if(tok_enum == Token_Enum.COMMENT_SIGN){
+                        else if(complex_pair.containsKey(String.valueOf(ch))){
+                            ExtendedPair ep = complex_pair.get(String.valueOf(ch));
+                            ep.getEnum(res,ch,temp_str,line_len);
+                            Token ehe_tok = res.remove(res.size()-1);
+                            if(ehe_tok.token == Token_Enum.COMMENT_SIGN){
                                 is_comment = true;
                             }
-                            if(tok_enum == Token_Enum.ERROR_TOKEN){
-                                Token temp_tok = new Token(Token_Enum.VARIABLE_NAME,temp_str.substring(0,temp_str.length()-1),line_len);
-                                res.add(temp_tok);
-                                temp_str = new StringBuilder();
-                                temp_str.append(ch);
-                                Token tok = new Token(Ep.orig_enum,String.valueOf(last_ch),line_len);
-                                res.add(tok);
-                            }else{
-                                String var_str = temp_str.substring(0,temp_str.length()-1);
-                                if(!var_str.isEmpty()){
-                                    res.add(new Token(Token_Enum.VARIABLE_NAME, var_str,line_len));
-                                }
-                                temp_str = new StringBuilder();
-                                //adding the stoper
-                                Token tok = new Token(tok_enum,sb.toString(),line_len);
-                                res.add(tok);
-                            }
+                            res.add(ehe_tok);
                         }
-                        //False: add ch to temp_str
-                        else{
-                            temp_str.append(ch);
-                        }
+                        else temp_str.append(ch);
                     }
-                    if(!temp_str.isEmpty()){
+                    if(!temp_str.isEmpty() && !is_comment){
                         res.add(new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len));
                     }
                 }

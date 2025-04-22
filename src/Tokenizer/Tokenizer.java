@@ -18,13 +18,17 @@ public class Tokenizer{
         ADD_OPP,SUB_OPP,MUL_OPP,MOD_OPP,DIV_OPP,CONCAT_OPP,
 
         //Boolean Operators
-        EQUALTO_OPP,AND_BOOL,OR_BOOL,
+        EQUALTO_OPP,AND_BOOL,OR_BOOL,NEGATE_BOOL,
 
         //Comparisson Opperators
         GREATER_THAN,LESS_THAN,GT_EQUAL,LT_EQUAL,NOT_EQUAL,
 
         //Last Option
         VARIABLE_NAME,
+
+        //Boolean Values
+        TRUE_BOOL,FALSE_BOOL,
+
         //Error
         ERROR_TOKEN,
 
@@ -35,8 +39,10 @@ public class Tokenizer{
         PRINT_FUNC,INPUT_FUNC,
 
         //conditionals
-        IF_COND,ELSE_COND,ELIF_COND,CODE_BLOCK,
-        FOR_LOOP
+        IF_COND,CODE_BLOCK,
+        FOR_LOOP_1,FOR_LOOP_2,
+
+        ELSE_COND_TEMP,ELSE_COND,ELIF_COND,
     }
 
     HashMap<String, Token_Enum> keyword_pairs;
@@ -55,8 +61,14 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
-        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
+        keyword_pairs.put("ALANG", Token_Enum.FOR_LOOP_1);
+        keyword_pairs.put("SA", Token_Enum.FOR_LOOP_2);
+        keyword_pairs.put("WALA", Token_Enum.ELSE_COND_TEMP);
+        keyword_pairs.put("DLI", Token_Enum.NEGATE_BOOL);
+        keyword_pairs.put("\"OO\"", Token_Enum.ELSE_COND_TEMP);
+        keyword_pairs.put("\"DLI\"", Token_Enum.NEGATE_BOOL);
+//        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
+//        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
         //for functions
 
 
@@ -118,7 +130,23 @@ public class Tokenizer{
 //                System.out.println("Parsing : " + word);
                 if (this.keyword_pairs.containsKey(word)){
                     Token_Enum tok = this.keyword_pairs.get(word);
-                    Token token = new Token(tok,word,line_len);
+                    Token token = new Token(Token_Enum.COLON,"TEMP",-1);
+                    switch (tok){
+                        case ELSE_COND_TEMP -> {
+                            Token top = res.remove(res.size()-1);
+                            if (top.token == Token_Enum.IF_COND){
+                                token =  new Token(Token_Enum.ELSE_COND, top.keyword + " " + word, line_len);
+                            }
+                        }case NEGATE_BOOL -> {
+                            Token top = res.remove(res.size()-1);
+                            if (top.token == Token_Enum.IF_COND){
+                                token =  new Token(Token_Enum.ELIF_COND, top.keyword + " " + word, line_len);
+                            }
+                        }
+                        default -> {
+                            token = new Token(tok,word,line_len);
+                        }
+                    }
                     res.add(token);
                 } else if (is_comment) {
                     res.add(new Token(Token_Enum.COMMENT_STRING,word,line_len));

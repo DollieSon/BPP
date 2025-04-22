@@ -41,7 +41,6 @@ public class Tokenizer{
 
     HashMap<String, Token_Enum> keyword_pairs;
     HashMap<String, Token_Enum> single_stoper;
-    HashMap<String, Token_Enum> functions;
     HashMap<String, ExtendedPair> complex_pair;
     public Tokenizer(){
         keyword_pairs = new HashMap<>();
@@ -56,11 +55,9 @@ public class Tokenizer{
         keyword_pairs.put("O", Token_Enum.OR_BOOL);
         keyword_pairs.put("KUNG", Token_Enum.IF_COND);
         keyword_pairs.put("PUNDOK", Token_Enum.CODE_BLOCK);
-
+        keyword_pairs.put("IPAKITA", Token_Enum.PRINT_FUNC);
+        keyword_pairs.put("DAWAT", Token_Enum.INPUT_FUNC);
         //for functions
-        functions = new HashMap<>();
-        functions.put("IPAKITA", Token_Enum.PRINT_FUNC);
-        functions.put("DAWAT", Token_Enum.INPUT_FUNC);
 
 
         //for single stoppers
@@ -132,11 +129,7 @@ public class Tokenizer{
                         //check if ch is a stoper
                         if(single_stoper.containsKey(String.valueOf(ch))){
                             //check if the previous string is a function
-                            if(ch == ':' &&  this.functions.containsKey(temp_str.toString())){
-                                Token tok = new Token(functions.get(temp_str.toString()),temp_str.toString(),line_len);
-                                res.add(tok);
-                            }
-                            else if(!temp_str.isEmpty()){
+                            if(!temp_str.isEmpty()){
                                 Token tok = new Token(Token_Enum.VARIABLE_NAME, temp_str.toString(),line_len);
                                 res.add(tok);
                             }

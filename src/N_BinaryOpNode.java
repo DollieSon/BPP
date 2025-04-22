@@ -1,3 +1,5 @@
+import Tokenizer.Token;
+
 public class N_BinaryOpNode extends N_ASTNode {
     public final Token operator;  // e.g., +, *, UG
     public final N_ASTNode left;

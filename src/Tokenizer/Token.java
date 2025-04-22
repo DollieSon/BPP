@@ -1,9 +1,11 @@
+package Tokenizer;
+
 public class Token implements Cloneable {
-    Tokenizer.Token_Enum token;
-    String keyword;
+    public Tokenizer.Token_Enum token;
+    public String keyword;
     //TBE
     int line;
-    public Token(Tokenizer.Token_Enum tok,String str,int line){
+    public Token(Tokenizer.Token_Enum tok, String str, int line){
         this.token = tok;
         this.keyword = str;
         this.line = line;

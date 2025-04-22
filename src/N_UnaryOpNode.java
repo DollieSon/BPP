@@ -1,3 +1,5 @@
+import Tokenizer.Token;
+
 public class N_UnaryOpNode extends N_ASTNode {
     public final Token operator;  // e.g., -, DILI
     public final N_ASTNode operand;

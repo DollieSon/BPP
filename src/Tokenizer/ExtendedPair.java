@@ -1,19 +1,21 @@
+package Tokenizer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ExtendedPair {
 
     Token orig_tok;
-    HashMap<String,Token> pair;
+    HashMap<String, Token> pair;
     public ExtendedPair(Token orig){
         orig_tok = orig;
         pair = new HashMap<>();
     }
     // if for = then string should be < for <= or > for >=
-    public void add_pair(String sign,Token towken){
+    public void add_pair(String sign, Token towken){
         pair.put(sign,towken);
     }
-    public void getEnum(ArrayList<Token> res_list, char ch, StringBuilder sb,int line_num){
+    public void getEnum(ArrayList<Token> res_list, char ch, StringBuilder sb, int line_num){
         Token cloned_tok;
         try {
             cloned_tok =  (Token) orig_tok.clone();

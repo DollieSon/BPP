@@ -1,6 +1,9 @@
+import Tokenizer.Tokenizer;
+import Tokenizer.Token;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 
 public class Parser {
     private ArrayList<Token> tokens;
@@ -250,8 +253,8 @@ public class Parser {
             return new N_UnaryOpNode(op, parseUnary());
         }
         //WALA PAY DILI
-//        else if (match(Tokenizer.Token_Enum.NOT_BOOL)) { // DILI
-//            Token op = previous();
+//        else if (match(Tokenizer.Tokenizer.Token_Enum.NOT_BOOL)) { // DILI
+//            Tokenizer.Tokenizer.Token op = previous();
 //            return new N_UnaryOpNode(op, parseUnary());
 //        }
         return parsePrimary();

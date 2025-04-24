@@ -1,7 +1,10 @@
+--test
 SUGOD
-	MUGNA NUMERO xyz, abc = 100
+	MUGNA NUMERO abc = -100
+	MUGNA LETRA bbb = "aaaa"
+	MUGNA TIPIK d = .1
 	xyz = ((abc*5)/10+10)*-1
 	MUGNA NUMERO numeroo
 	MUGNA LETRA test=v
-	IPAKITA:[[] & xyz & []]
+	IPAKITA: [[] & xyz & []]
 KATAPUSAN

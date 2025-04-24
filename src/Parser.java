@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Parser {
     private ArrayList<Token> tokens;
@@ -11,47 +12,62 @@ public class Parser {
 
     public N_ProgramNode parse() {
         N_ProgramNode program = new N_ProgramNode();
-        if (!isAtStart(Tokenizer.Token_Enum.PROGRAM_START)) {
-            //Maybe static var para ma change change ra ang word na sugod and katapusan and stuff
-            error("Expected SUGOD at the beginning");
+        while (match(Tokenizer.Token_Enum.COMMENT_STRING) || match(Tokenizer.Token_Enum.COMMENT_SIGN) ){}
+
+        if (!match(Tokenizer.Token_Enum.PROGRAM_START)) {
+            error(String.format("[Line: %s] Expected SUGOD at the beginning", tokens.get(current).line));
         }
         System.out.println("Program Start: SUGOD");
-        processStatement();
         // Processing sa tunga tunga
-        while (!isAtEnd() && !check(Tokenizer.Token_Enum.PROGRAM_END)) {
+        while (!isAtLast()) {
             // AHAHHAHAHA BRO MADE A MATCH STATEMENT ICANT
             if (match(Tokenizer.Token_Enum.VAR_DECLARE)) { //MUGNA
-                System.out.println("1");
+//                System.out.println("1");
                 program.statements.add(parseVariableDeclaration());
             } else if (match(Tokenizer.Token_Enum.PRINT_FUNC)) {
-                System.out.println("2");
+//                System.out.println("2");
                 program.statements.add(parsePrintStatement());
             } else if (check(Tokenizer.Token_Enum.VARIABLE_NAME)) {
-                System.out.println("3");
+//                System.out.println("3");
+                //Reserved keywords checking
+                if(Objects.equals(tokens.get(current).keyword, "IPAKITA")){
+                    error(String.format("[Line: %s] Expected a colon after IPAKITA", tokens.get(current).line));
+                }
                 program.statements.add(parseAssignment());
             } else {
+//                System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
+                if (check(Tokenizer.Token_Enum.PROGRAM_END)){
+                    processStatement();
+                    break;
+                }
                 System.out.println("99");
                 processStatement(); // Placeholder for future statements
             }
         }
 
-        if (!match(Tokenizer.Token_Enum.PROGRAM_END)) {
-            error("Expected KATAPUSAN at the end");
+        while (match(Tokenizer.Token_Enum.COMMENT_STRING) || match(Tokenizer.Token_Enum.COMMENT_SIGN) ){}
+        if (!match(Tokenizer.Token_Enum.PROGRAM_END) && !isAtEnd()) {
+            error(String.format("[Line: %s] Expected KATAPUSAN at the end", tokens.get(current).line));
         }
+
         System.out.println("Program End: KATAPUSAN");
 
         System.out.println("Parsing successful!");
 
-        System.out.println("TREE: \n" + program);
         return program;
     }
 
     private N_VariableDeclarationNode parseVariableDeclaration() {
-        //KUWANG VALIDATION LIKE FOR LETRA NA 'C' kay ma assign sa '
-        //TYPE VALIDATION
-
         N_VariableDeclarationNode declNode = new N_VariableDeclarationNode();
         declNode.type = advance().token; // NUMERO, LETRA, etc.
+
+//        System.out.println("DELC: " + declNode.type);
+        if(declNode.type != Tokenizer.Token_Enum.INT_TYPE &&
+            declNode.type != Tokenizer.Token_Enum.BOOL_TYPE &&
+            declNode.type != Tokenizer.Token_Enum.CHAR_TYPE &&
+            declNode.type != Tokenizer.Token_Enum.FLOAT_TYPE ){
+            error(String.format("[Line: %s] Expected type after MUGNA", tokens.get(current).line));
+        }
 
         do {
             // Use parameterized constructor
@@ -246,30 +262,50 @@ public class Parser {
         if (match(Tokenizer.Token_Enum.PAREN_OPEN)) {
             N_ASTNode expr = parseExpression();
             if (!match(Tokenizer.Token_Enum.PAREN_CLOSE)) {
-                error("Missing closing parenthesis");
+                error(String.format("[Line: %s] Missing Parenthesis", tokens.get(current).line));
             }
             return expr;
         }
 
+        // Handle LETRA (e.g. 'a')
+        if (match(Tokenizer.Token_Enum.SINGLE_QOUTE)) {
+            Token charToken = advance(); // should be the character
+            if (!match(Tokenizer.Token_Enum.SINGLE_QOUTE)) {
+                error(String.format("[Line: %s] Missing closing single quote", tokens.get(current).line));
+            }
+            return new N_LiteralNode(charToken.keyword.charAt(0)); // convert to char
+        }
+
+        // Handle TINUOD (e.g. "OO")
+        if (match(Tokenizer.Token_Enum.DOUBLE_QOUTE)) {
+            Token boolToken = advance(); // should be OO or DILI
+            if (!match(Tokenizer.Token_Enum.DOUBLE_QOUTE)) {
+                error(String.format("[Line: %s] Missing closing double quote", tokens.get(current).line));
+            }
+            return new N_LiteralNode(boolToken.keyword); // keep as string, let interpreter handle true/false
+        }
+
         Token token = advance();
+        //USELESS KAY ALWAYS SIYA VARIABLE NODE
         switch (token.token) {
             case VARIABLE_NAME:
                 return new N_VariableNode(token.keyword);
-            case INT_TYPE:  // Make sure your tokenizer emits these
+            case INT_TYPE:
                 return new N_LiteralNode(Integer.parseInt(token.keyword));
             case FLOAT_TYPE:
                 return new N_LiteralNode(Double.parseDouble(token.keyword));
             case BOOL_TYPE:
                 return new N_LiteralNode(token.keyword.equals("OO"));
             default:
-                error("Expected expression");
+                error(String.format("[Line: %s] Expected expression", token.line));
                 return null;
         }
     }
 
+
     private void processStatement() {
 //        System.out.println("Processing: " + tokens.get(current).keyword);
-//        System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
+//        System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword + " " + current);
         current++;
     }
 
@@ -283,12 +319,20 @@ public class Parser {
         return false;
     }
 
+    private void printCurrent(){
+        System.out.println("CURRENT TOKEN: " + tokens.get(current).token + " " + tokens.get(current).keyword);
+    }
+
     private boolean isAtStart(Tokenizer.Token_Enum expected) {
         return !tokens.isEmpty() && tokens.get(0).token == expected;
     }
 
     private boolean isAtEnd() {
         return current >= tokens.size();
+    }
+
+    private boolean isAtLast(){
+        return current >= tokens.size()-1;
     }
 
     private boolean check(Tokenizer.Token_Enum expected) {
